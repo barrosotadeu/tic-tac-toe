@@ -151,6 +151,12 @@ const Game = (() => {
         console.log(currentPlayer);
     };
 
+    const restartGame = () => {
+        started = false;
+        GameBoard.resetGameboard();
+        Game.start();
+    }
+
     const endGame = () =>{
         started = false;
         document.querySelector("#player1").value = '';
@@ -163,10 +169,12 @@ const Game = (() => {
         return document.querySelector("#player1").value !== '' && document.querySelector("#player2").value !== '';
     }
 
-    return {start, getCurrentPlayer, changePlayer, endGame};    
+    return {start, getCurrentPlayer, changePlayer, restartGame, endGame};    
 })();
 
 
 const startButton = document.querySelector("#start-button");
 startButton.addEventListener("click", Game.start);
 
+const restartButton = document.querySelector("#restart-button");
+restartButton.addEventListener("click", Game.restartGame );
