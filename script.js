@@ -76,13 +76,15 @@ const GameBoard = (() => {
 
     const showResults = (currentPlayer) => {
         const display = document.querySelector("#game-display");
-        if(checkForTie()){
+        if(checkForWinner()){
             console.log(display);
-            display.textContent = "Game Over! It's a tie!";
+            display.textContent = `Game over. The winner is ${currentPlayer.name}!`
+            
             return;
         }
+        display.textContent = "Game Over! It's a tie!";
 
-        display.textContent = `Game over. The winner is ${currentPlayer.name}!`;
+        ;
     };
 
     
