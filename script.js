@@ -13,11 +13,15 @@ const GameBoard = (() => {
 
         squares.forEach(square => square.addEventListener("click", e => {
             console.log("teste");
-            let index = e.target.getAttribute("index");
+            let index;
+            let currentPlayer = Game.getCurrentPlayer();                        
+            index = e.target.getAttribute("index");
+            
+            
             if(gameBoard[index] !== ""){
                 alert("Spot already clicked!");
             }else {
-                let currentPlayer = Game.getCurrentPlayer();
+                
                 currentPlayer.play(index);
                 if(checkForGameOver()){                    
                     showResults(currentPlayer);
@@ -28,6 +32,25 @@ const GameBoard = (() => {
                 currentPlayer = Game.getCurrentPlayer();
                 document.querySelector("#game-display").textContent = `Current player: ${currentPlayer.name}.
                 Mark: ${currentPlayer.mark}`; 
+                if(currentPlayer.name === "Computer"){
+                    document.querySelector("#game-display").textContent += "\nComputer is playing...";
+                    setTimeout(
+                        () => {
+                            currentPlayer.play(Game.getComputerIndex());
+                            if(checkForGameOver()){                    
+                                showResults(currentPlayer);
+                                Game.endGame();
+                                return;
+                            };
+                            Game.changePlayer();
+                            currentPlayer = Game.getCurrentPlayer();
+                            document.querySelector("#game-display").textContent = `Current player: ${currentPlayer.name}.
+                            Mark: ${currentPlayer.mark}`;     
+                        }, 1000);
+                    
+                    
+
+                }
 
                 }
                             
@@ -40,7 +63,7 @@ const GameBoard = (() => {
         gameBoard[index] = mark;
         const square = document.querySelector(`div[index = "${index}"]`);
         square.textContent = mark;
-        console.log(gameBoard);
+       
     };
 
     const checkForGameOver = () => {
@@ -77,7 +100,7 @@ const GameBoard = (() => {
     const showResults = (currentPlayer) => {
         const display = document.querySelector("#game-display");
         if(checkForWinner()){
-            console.log(display);
+            
             display.textContent = `Game over. The winner is ${currentPlayer.name}!`
             
             return;
@@ -92,11 +115,15 @@ const GameBoard = (() => {
         gameBoard = ["", "", "", "", "", "", "", "", ""];
         const squares = document.querySelectorAll(".square");
         squares.forEach(square => square.remove());
+    };
+
+    const getGameboard = () => {
+        return gameBoard;
     }
     
     
 
-    return {render, updateGameboard, resetGameboard};
+    return {render, getGameboard, updateGameboard, resetGameboard};
 })();
 
 
@@ -114,21 +141,22 @@ const Game = (() => {
 
 
     let started = false;    
+    let againstComputer = false;
     let currentPlayer;
     
     
 
     const start = () => {
         if(!started){
-            if(!checkForPlayersInput()){
+            if(!checkForTwoPlayersInput()){
                 alert("Please insert player 1 and player 2 names");
                 return;
             }
-            gameOver = false;
-            started = true;           
+            
+            started = true;   
+            document.querySelector("#against-computer-message").textContent = '';        
               
-            currentPlayer = createPlayer(document.querySelector("#player1").value, "X");  
-            console.log(currentPlayer);       
+            currentPlayer = createPlayer(document.querySelector("#player1").value, "X");                   
             GameBoard.render();
             document.querySelector("#game-display").textContent = `Current player: ${currentPlayer.name}.
              Mark: ${currentPlayer.mark}`; 
@@ -136,19 +164,74 @@ const Game = (() => {
 
             }
         };
+    const startAgainstComputer = () => {
+        if(!started){
+            if(!checkForOnePlayerInput()){
+                alert("To play against the computer, please start only one player name");
+                return;
+            }
+
+            document.querySelector("#against-computer-message").textContent = '';
+            started = true;
+            againstComputer = true;
+            currentPlayer = createPlayerWhenAgainsComputer();
+                            
+            
+            document.querySelector("#game-display").textContent = `Current player: ${currentPlayer.name}.
+             Mark: ${currentPlayer.mark}`;                 
+            GameBoard.render();
+
+        }
+    };
+    
+    const createPlayerWhenAgainsComputer = () => {
+        return document.querySelector("#player1").value? 
+                                                createPlayer(document.querySelector("#player1").value, "X") :
+                                                createPlayer(document.querySelector("#player2").value, "O");    
+    };
     
 
     const getCurrentPlayer = function() {
         return currentPlayer;
     };
+
+    const getAgainstComputer = () => {
+        return againstComputer;
+    };
+
+    const getComputerIndex = () => {
+        const gameBoard = GameBoard.getGameboard();
+        const index = Math.floor(Math.random() * gameBoard.length);        
+        return gameBoard[index] === ""? index : getComputerIndex();
+
+    }
     
     const changePlayer = () => {
+        if(againstComputer){
+            if(currentPlayer.name === "Computer"){
+                currentPlayer = createPlayerWhenAgainsComputer();                
+                return;
+            };
+            if(currentPlayer.mark === "X"){
+                currentPlayer = createPlayer("Computer", "O")                
+                return;
+            }
+            if(currentPlayer.mark === "O"){
+                currentPlayer = createPlayer("Computer", "X");
+                return;
+            }
+            currentPlayer = createPlayer("Computer", "X");            
+            return;
+        };
+
+
         if(currentPlayer.mark === "X"){
-            currentPlayer = createPlayer(document.querySelector("#player2").value, "O");            
-        }else {
-            currentPlayer = createPlayer(document.querySelector("#player1").value, "X");
+            currentPlayer = createPlayer(document.querySelector("#player2").value, "O");
+            return;            
         }
-        console.log(currentPlayer);
+        currentPlayer = createPlayer(document.querySelector("#player1").value, "X");
+        return;
+        
     };
 
     const restartGame = () => {
@@ -165,16 +248,25 @@ const Game = (() => {
 
     };
 
-    const checkForPlayersInput = () => {
+    const checkForTwoPlayersInput = () => {
         return document.querySelector("#player1").value !== '' && document.querySelector("#player2").value !== '';
+    };
+
+    const checkForOnePlayerInput = () => {
+        return document.querySelector("#player1").value !== '' && document.querySelector("#player2").value === '' ||
+               document.querySelector("#player1").value === '' && document.querySelector("#player2").value !== '';
     }
 
-    return {start, getCurrentPlayer, changePlayer, restartGame, endGame};    
+    return {start, startAgainstComputer, getCurrentPlayer, getAgainstComputer, getComputerIndex, changePlayer, restartGame, endGame};    
 })();
 
 
 const startButton = document.querySelector("#start-button");
 startButton.addEventListener("click", Game.start);
 
+const startAgainstComputerButton = document.querySelector("#start-against-computar-button");
+startAgainstComputerButton.addEventListener("click", Game.startAgainstComputer);
+
 const restartButton = document.querySelector("#restart-button");
 restartButton.addEventListener("click", Game.restartGame );
+
