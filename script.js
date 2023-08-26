@@ -120,6 +120,10 @@ const Game = (() => {
 
     const start = () => {
         if(!started){
+            if(!checkForPlayersInput()){
+                alert("Please insert player 1 and player 2 names");
+                return;
+            }
             gameOver = false;
             started = true;           
               
@@ -153,6 +157,10 @@ const Game = (() => {
         document.querySelector("#player2").value = '';
         GameBoard.resetGameboard();
 
+    };
+
+    const checkForPlayersInput = () => {
+        return document.querySelector("#player1").value !== '' && document.querySelector("#player2").value !== '';
     }
 
     return {start, getCurrentPlayer, changePlayer, endGame};    
